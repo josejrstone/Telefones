@@ -19,34 +19,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        /* Telas */
-        #loginScreen, #appScreen { display: none; }
-        
-        /* Login */
-        .login-box {
-            max-width: 300px;
-            margin: 100px auto;
-            text-align: center;
-        }
-        .login-box input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn-login {
-            width: 100%;
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
         /* Navegação Admin */
         .nav-tabs {
             display: flex;
@@ -68,6 +40,35 @@
         }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        /* Login Admin */
+        .login-box {
+            max-width: 300px;
+            margin: 40px auto;
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
 
         /* Área do Disparador */
         textarea.msg-box {
@@ -162,27 +163,25 @@
             font-weight: bold;
             float: right;
         }
+        .btn-logout {
+            color: #e74c3c;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
-<!-- TELA DE LOGIN -->
-<div id="loginScreen" class="container login-box" style="display: block;">
-    <h2>Acesso Restrito</h2>
-    <input type="text" id="username" placeholder="Usuário">
-    <input type="password" id="password" placeholder="Senha">
-    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
-</div>
-
-<!-- TELA PRINCIPAL (APP) -->
-<div id="appScreen" class="container">
+<div class="container">
     <div class="nav-tabs">
-        <button id="tabBtn-disparador" class="active" onclick="mudarAba('disparador')">📱 Disparador</button>
-        <button id="tabBtn-admin" onclick="mudarAba('admin')">⚙️ Admin (Importar)</button>
-        <button onclick="sair()" style="margin-left: auto; color: #e74c3c;">Sair</button>
+        <button id="tabBtn-disparador" class="active" onclick="mudarAba('disparador')">📱 Disparador (Livre)</button>
+        <button id="tabBtn-admin" onclick="mudarAba('admin')">⚙️ Admin (Acesso Restrito)</button>
     </div>
 
-    <!-- ABA 1: DISPARADOR -->
+    <!-- ABA 1: DISPARADOR (PÚBLICO) -->
     <div id="aba-disparador" class="tab-content active">
         <label for="customMessage"><strong>Mensagem Personalizada:</strong></label>
         <p style="font-size: 12px; color: #666; margin-top: 2px;">O sistema adicionará automaticamente "Olá [Primeiro Nome], " antes desta mensagem. (Salvo automaticamente)</p>
@@ -198,24 +197,40 @@
         <div class="pagination" id="pagination"></div>
     </div>
 
-    <!-- ABA 2: ADMIN / IMPORTAÇÃO -->
+    <!-- ABA 2: ADMIN / IMPORTAÇÃO (PROTEGIDO) -->
     <div id="aba-admin" class="tab-content">
-        <h3>Importar Contatos do LibreOffice</h3>
-        <p>Copie a coluna inteira de nomes e cole na primeira caixa. Faça o mesmo com os números na segunda caixa. Eles devem estar na mesma ordem.</p>
         
-        <div class="import-grid">
-            <div>
-                <label><strong>Nomes (1 por linha)</strong></label>
-                <textarea id="inputNomes" placeholder="Cole os nomes aqui..."></textarea>
-            </div>
-            <div>
-                <label><strong>Telefones (1 por linha)</strong></label>
-                <textarea id="inputTelefones" placeholder="Cole os números aqui..."></textarea>
-            </div>
+        <!-- Tela de Login do Admin -->
+        <div id="adminLogin" class="login-box">
+            <h3>Acesso Restrito</h3>
+            <input type="text" id="username" placeholder="Usuário">
+            <input type="password" id="password" placeholder="Senha">
+            <button class="btn-login" onclick="fazerLogin()">Entrar no Admin</button>
         </div>
 
-        <button class="btn-import" onclick="importarContatos()">➕ Importar Contatos</button>
-        <button class="btn-danger" onclick="limparTudo()">🗑️ Apagar Toda a Lista</button>
+        <!-- Conteúdo do Admin (Oculto até logar) -->
+        <div id="adminContent" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3>Importar Contatos do LibreOffice</h3>
+                <button class="btn-logout" onclick="sairAdmin()">Sair do Admin 🚪</button>
+            </div>
+            
+            <p style="font-size: 14px;">Copie a coluna inteira de nomes e cole na primeira caixa. Faça o mesmo com os números na segunda caixa. Eles devem estar na mesma ordem.</p>
+            
+            <div class="import-grid">
+                <div>
+                    <label><strong>Nomes (1 por linha)</strong></label>
+                    <textarea id="inputNomes" placeholder="Cole os nomes aqui..."></textarea>
+                </div>
+                <div>
+                    <label><strong>Telefones (1 por linha)</strong></label>
+                    <textarea id="inputTelefones" placeholder="Cole os números aqui..."></textarea>
+                </div>
+            </div>
+
+            <button class="btn-import" onclick="importarContatos()">➕ Importar Contatos</button>
+            <button class="btn-danger" onclick="limparTudo()">🗑️ Apagar Toda a Lista</button>
+        </div>
     </div>
 </div>
 
@@ -227,39 +242,11 @@
     const itensPorPagina = 10;
     let paginaAtual = 1;
 
-    // --- LOGIN ---
-    function fazerLogin() {
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
-
-        if (user === 'josejrs' && pass === '1506') {
-            sessionStorage.setItem('logado', 'true');
-            iniciarApp();
-        } else {
-            alert('Usuário ou senha incorretos!');
-        }
-    }
-
-    function sair() {
-        sessionStorage.removeItem('logado');
-        document.getElementById('loginScreen').style.display = 'block';
-        document.getElementById('appScreen').style.display = 'none';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-    }
-
-    function verificarSessao() {
-        if (sessionStorage.getItem('logado') === 'true') {
-            iniciarApp();
-        }
-    }
-
-    function iniciarApp() {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'block';
+    // --- INICIALIZAÇÃO DO APP ---
+    window.onload = function() {
         document.getElementById('customMessage').value = mensagemSalva;
         renderizarLista();
-    }
+    };
 
     // --- NAVEGAÇÃO DE ABAS ---
     function mudarAba(aba) {
@@ -270,6 +257,40 @@
 
         document.getElementById(`aba-${aba}`).classList.add('active');
         document.getElementById(`tabBtn-${aba}`).classList.add('active');
+
+        if (aba === 'admin') {
+            verificarLoginAdmin();
+        }
+    }
+
+    // --- LOGIN DO ADMIN ---
+    function verificarLoginAdmin() {
+        if (sessionStorage.getItem('adminLogado') === 'true') {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+        } else {
+            document.getElementById('adminLogin').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'none';
+        }
+    }
+
+    function fazerLogin() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+
+        if (user === 'josejrs' && pass === '1506') {
+            sessionStorage.setItem('adminLogado', 'true');
+            document.getElementById('username').value = ''; // Limpa campos
+            document.getElementById('password').value = '';
+            verificarLoginAdmin();
+        } else {
+            alert('Usuário ou senha incorretos!');
+        }
+    }
+
+    function sairAdmin() {
+        sessionStorage.removeItem('adminLogado');
+        mudarAba('disparador'); // Volta para a tela livre ao sair
     }
 
     // --- ÁREA ADMIN / IMPORTAÇÃO ---
@@ -277,7 +298,6 @@
         const nomesTexto = document.getElementById('inputNomes').value;
         const telefonesTexto = document.getElementById('inputTelefones').value;
 
-        // Divide por quebras de linha (funciona para copiar/colar do LibreOffice)
         const nomesArray = nomesTexto.split(/\r?\n/);
         const telefonesArray = telefonesTexto.split(/\r?\n/);
 
@@ -288,12 +308,12 @@
             let nomeStr = nomesArray[i] ? nomesArray[i].trim() : '';
             let telefoneStr = telefonesArray[i] ? telefonesArray[i].trim() : '';
             
-            // Remove qualquer coisa que não seja número do telefone (mantendo limpo pro WhatsApp)
+            // Limpa o telefone deixando só números
             telefoneStr = telefoneStr.replace(/\D/g, '');
 
             if (nomeStr !== '' && telefoneStr !== '') {
                 clientes.push({
-                    id: Date.now() + i, // ID único
+                    id: Date.now() + i, 
                     nome: nomeStr,
                     telefone: telefoneStr,
                     enviado: false
@@ -309,9 +329,9 @@
             document.getElementById('inputTelefones').value = '';
             paginaAtual = 1;
             renderizarLista();
-            mudarAba('disparador');
+            mudarAba('disparador'); // Volta automaticamente para o disparador
         } else {
-            alert('Nenhum contato válido encontrado para importar. Verifique se copiou corretamente.');
+            alert('Nenhum contato válido encontrado. Copie as colunas corretamente.');
         }
     }
 
@@ -320,7 +340,7 @@
             clientes = [];
             salvarBancoLocal();
             renderizarLista();
-            alert('Tudo limpo!');
+            alert('Base de dados limpa com sucesso!');
         }
     }
 
@@ -342,7 +362,7 @@
         resumoDiv.innerText = `Total de Contatos: ${clientes.length} | Na Base de Dados`;
 
         if (clientes.length === 0) {
-            listaDiv.innerHTML = '<p style="text-align:center; color:#999;">Nenhum cliente cadastrado. Vá na aba Admin e importe sua lista.</p>';
+            listaDiv.innerHTML = '<p style="text-align:center; color:#999; padding: 20px;">Nenhum cliente cadastrado. Peça ao administrador para importar a lista.</p>';
             document.getElementById('pagination').innerHTML = '';
             document.getElementById('pageStatus').style.display = 'none';
             return;
@@ -391,7 +411,6 @@
 
         const url = `https://wa.me/${cliente.telefone}?text=${encodeURIComponent(mensagemFinal)}`;
         
-        // Atualiza estado e salva no cache do navegador
         clientes[clienteIndex].enviado = true;
         salvarBancoLocal();
         
@@ -435,9 +454,6 @@
             paginacaoDiv.appendChild(btn);
         }
     }
-
-    // Inicializa verificando se já está logado na sessão
-    window.onload = verificarSessao;
 </script>
 
 </body>
