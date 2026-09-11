@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema WhatsApp - Disparador</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Telas */
+        #loginScreen, #appScreen { display: none; }
+        
+        /* Login */
+        .login-box {
+            max-width: 300px;
+            margin: 100px auto;
+            text-align: center;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        /* Navegação Admin */
+        .nav-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .nav-tabs button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        .nav-tabs button.active {
+            color: #2980b9;
+            border-bottom: 2px solid #2980b9;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Área do Disparador */
+        textarea.msg-box {
+            width: 100%;
+            height: 80px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        .client-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .btn-wa {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-wa.sent { background-color: #95a5a6; cursor: default; }
+        
+        /* Paginação e Status */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .page-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .status-alert {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Área de Importação */
+        .import-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .import-grid textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            box-sizing: border-box;
+            white-space: pre;
+        }
+        .btn-import {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="loginScreen" class="container login-box" style="display: block;">
+    <h2>Acesso Restrito</h2>
+    <input type="text" id="username" placeholder="Usuário">
+    <input type="password" id="password" placeholder="Senha">
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+</div>
+
+<!-- TELA PRINCIPAL (APP) -->
+<div id="appScreen" class="container">
+    <div class="nav-tabs">
+        <button id="tabBtn-disparador" class="active" onclick="mudarAba('disparador')">📱 Disparador</button>
+        <button id="tabBtn-admin" onclick="mudarAba('admin')">⚙️ Admin (Importar)</button>
+        <button onclick="sair()" style="margin-left: auto; color: #e74c3c;">Sair</button>
+    </div>
+
+    <!-- ABA 1: DISPARADOR -->
+    <div id="aba-disparador" class="tab-content active">
+        <label for="customMessage"><strong>Mensagem Personalizada:</strong></label>
+        <p style="font-size: 12px; color: #666; margin-top: 2px;">O sistema adicionará automaticamente "Olá [Primeiro Nome], " antes desta mensagem. (Salvo automaticamente)</p>
+        <textarea id="customMessage" class="msg-box" placeholder="Digite o restante da sua mensagem aqui..." onkeyup="salvarMensagem()"></textarea>
+
+        <div id="pageStatus" class="status-alert">
+            ✅ Todos os clientes desta página foram contatados!
+        </div>
+
+        <div id="resumo" style="margin-bottom: 10px; font-weight: bold; color: #555;"></div>
+
+        <div id="clientList"></div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- ABA 2: ADMIN / IMPORTAÇÃO -->
+    <div id="aba-admin" class="tab-content">
+        <h3>Importar Contatos do LibreOffice</h3>
+        <p>Copie a coluna inteira de nomes e cole na primeira caixa. Faça o mesmo com os números na segunda caixa. Eles devem estar na mesma ordem.</p>
+        
+        <div class="import-grid">
+            <div>
+                <label><strong>Nomes (1 por linha)</strong></label>
+                <textarea id="inputNomes" placeholder="Cole os nomes aqui..."></textarea>
+            </div>
+            <div>
+                <label><strong>Telefones (1 por linha)</strong></label>
+                <textarea id="inputTelefones" placeholder="Cole os números aqui..."></textarea>
+            </div>
+        </div>
+
+        <button class="btn-import" onclick="importarContatos()">➕ Importar Contatos</button>
+        <button class="btn-danger" onclick="limparTudo()">🗑️ Apagar Toda a Lista</button>
+    </div>
+</div>
+
+<script>
+    // --- GERENCIAMENTO DE ESTADO / LOCALSTORAGE ---
+    let clientes = JSON.parse(localStorage.getItem('clientesLocal')) || [];
+    let mensagemSalva = localStorage.getItem('mensagemLocal') || '';
+    
+    const itensPorPagina = 10;
+    let paginaAtual = 1;
+
+    // --- LOGIN ---
+    function fazerLogin() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+
+        if (user === 'josejrs' && pass === '1506') {
+            sessionStorage.setItem('logado', 'true');
+            iniciarApp();
+        } else {
+            alert('Usuário ou senha incorretos!');
+        }
+    }
+
+    function sair() {
+        sessionStorage.removeItem('logado');
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('appScreen').style.display = 'none';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    function verificarSessao() {
+        if (sessionStorage.getItem('logado') === 'true') {
+            iniciarApp();
+        }
+    }
+
+    function iniciarApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'block';
+        document.getElementById('customMessage').value = mensagemSalva;
+        renderizarLista();
+    }
+
+    // --- NAVEGAÇÃO DE ABAS ---
+    function mudarAba(aba) {
+        document.getElementById('aba-disparador').classList.remove('active');
+        document.getElementById('aba-admin').classList.remove('active');
+        document.getElementById('tabBtn-disparador').classList.remove('active');
+        document.getElementById('tabBtn-admin').classList.remove('active');
+
+        document.getElementById(`aba-${aba}`).classList.add('active');
+        document.getElementById(`tabBtn-${aba}`).classList.add('active');
+    }
+
+    // --- ÁREA ADMIN / IMPORTAÇÃO ---
+    function importarContatos() {
+        const nomesTexto = document.getElementById('inputNomes').value;
+        const telefonesTexto = document.getElementById('inputTelefones').value;
+
+        // Divide por quebras de linha (funciona para copiar/colar do LibreOffice)
+        const nomesArray = nomesTexto.split(/\r?\n/);
+        const telefonesArray = telefonesTexto.split(/\r?\n/);
+
+        let adicionados = 0;
+        const maxLinhas = Math.max(nomesArray.length, telefonesArray.length);
+
+        for (let i = 0; i < maxLinhas; i++) {
+            let nomeStr = nomesArray[i] ? nomesArray[i].trim() : '';
+            let telefoneStr = telefonesArray[i] ? telefonesArray[i].trim() : '';
+            
+            // Remove qualquer coisa que não seja número do telefone (mantendo limpo pro WhatsApp)
+            telefoneStr = telefoneStr.replace(/\D/g, '');
+
+            if (nomeStr !== '' && telefoneStr !== '') {
+                clientes.push({
+                    id: Date.now() + i, // ID único
+                    nome: nomeStr,
+                    telefone: telefoneStr,
+                    enviado: false
+                });
+                adicionados++;
+            }
+        }
+
+        if (adicionados > 0) {
+            salvarBancoLocal();
+            alert(`${adicionados} contatos importados com sucesso!`);
+            document.getElementById('inputNomes').value = '';
+            document.getElementById('inputTelefones').value = '';
+            paginaAtual = 1;
+            renderizarLista();
+            mudarAba('disparador');
+        } else {
+            alert('Nenhum contato válido encontrado para importar. Verifique se copiou corretamente.');
+        }
+    }
+
+    function limparTudo() {
+        if(confirm('Tem certeza que deseja apagar TODOS os contatos e envios? Isso não pode ser desfeito.')) {
+            clientes = [];
+            salvarBancoLocal();
+            renderizarLista();
+            alert('Tudo limpo!');
+        }
+    }
+
+    // --- ÁREA DO DISPARADOR ---
+    function salvarMensagem() {
+        mensagemSalva = document.getElementById('customMessage').value;
+        localStorage.setItem('mensagemLocal', mensagemSalva);
+    }
+
+    function salvarBancoLocal() {
+        localStorage.setItem('clientesLocal', JSON.stringify(clientes));
+    }
+
+    function renderizarLista() {
+        const listaDiv = document.getElementById('clientList');
+        const resumoDiv = document.getElementById('resumo');
+        listaDiv.innerHTML = '';
+
+        resumoDiv.innerText = `Total de Contatos: ${clientes.length} | Na Base de Dados`;
+
+        if (clientes.length === 0) {
+            listaDiv.innerHTML = '<p style="text-align:center; color:#999;">Nenhum cliente cadastrado. Vá na aba Admin e importe sua lista.</p>';
+            document.getElementById('pagination').innerHTML = '';
+            document.getElementById('pageStatus').style.display = 'none';
+            return;
+        }
+
+        const inicio = (paginaAtual - 1) * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        const clientesPagina = clientes.slice(inicio, fim);
+
+        clientesPagina.forEach(cliente => {
+            const div = document.createElement('div');
+            div.className = 'client-item';
+            
+            const btnClass = cliente.enviado ? 'btn-wa sent' : 'btn-wa';
+            const btnText = cliente.enviado ? 'Enviado ✔' : 'WhatsApp';
+
+            div.innerHTML = `
+                <div class="client-info">
+                    <strong>${cliente.nome}</strong><br>
+                    <small style="color: #666;">${cliente.telefone}</small>
+                </div>
+                <button class="${btnClass}" onclick="enviarWhatsApp(${cliente.id})" id="btn-${cliente.id}">
+                    ${btnText}
+                </button>
+            `;
+            listaDiv.appendChild(div);
+        });
+
+        verificarStatusPagina();
+        renderizarPaginacao();
+    }
+
+    function enviarWhatsApp(id) {
+        const clienteIndex = clientes.findIndex(c => c.id === id);
+        if (clienteIndex === -1) return;
+        
+        const cliente = clientes[clienteIndex];
+        const mensagemBase = document.getElementById('customMessage').value;
+        
+        const primeiroNome = cliente.nome.split(' ')[0];
+        
+        let mensagemFinal = `Olá ${primeiroNome}!`;
+        if (mensagemBase.trim() !== "") {
+            mensagemFinal += ` ${mensagemBase}`;
+        }
+
+        const url = `https://wa.me/${cliente.telefone}?text=${encodeURIComponent(mensagemFinal)}`;
+        
+        // Atualiza estado e salva no cache do navegador
+        clientes[clienteIndex].enviado = true;
+        salvarBancoLocal();
+        
+        const btn = document.getElementById(`btn-${id}`);
+        btn.className = 'btn-wa sent';
+        btn.innerHTML = 'Enviado ✔';
+
+        window.open(url, '_blank');
+        verificarStatusPagina();
+    }
+
+    function verificarStatusPagina() {
+        const inicio = (paginaAtual - 1) * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        const clientesPagina = clientes.slice(inicio, fim);
+        
+        const todosEnviados = clientesPagina.length > 0 && clientesPagina.every(c => c.enviado);
+        
+        const statusAlert = document.getElementById('pageStatus');
+        if (todosEnviados) {
+            statusAlert.style.display = 'block';
+        } else {
+            statusAlert.style.display = 'none';
+        }
+    }
+
+    function renderizarPaginacao() {
+        const paginacaoDiv = document.getElementById('pagination');
+        paginacaoDiv.innerHTML = '';
+        
+        const totalPaginas = Math.ceil(clientes.length / itensPorPagina);
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            const btn = document.createElement('button');
+            btn.className = `page-btn ${i === paginaAtual ? 'active' : ''}`;
+            btn.innerText = i;
+            btn.onclick = () => {
+                paginaAtual = i;
+                renderizarLista();
+            };
+            paginacaoDiv.appendChild(btn);
+        }
+    }
+
+    // Inicializa verificando se já está logado na sessão
+    window.onload = verificarSessao;
+</script>
+
+</body>
+</html>
